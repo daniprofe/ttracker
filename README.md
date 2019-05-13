@@ -1,34 +1,6 @@
-# ttracker
+# TTracker
 
-## Project setup
-```
-npm install
-```
+TTracker is another Daniprofe's proof-of-concept projects.
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Run your unit tests
-```
-npm run test:unit
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+TTracker Is a PWA developed using @ionic/vue and PouchDB, which allows user to
+track the time used on tasks, using any browser or device.
