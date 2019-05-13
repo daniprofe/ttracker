@@ -53,6 +53,8 @@ export default {
     computed: {
 
         trackingNow() {
+            console.error('-----------------------');
+            console.error(this.$store.state.trackingNow.startedAt);
             return (this.$store.state.trackingNow.startedAt);
         },
 

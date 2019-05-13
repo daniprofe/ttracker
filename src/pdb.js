@@ -11,21 +11,46 @@ const pdb = {
     },
 
     loadTrackingNow() {
+
         this.db.local.get('trackingNow').then(data => {
-            data.startedAt = moment(data.startedAt, moment.ISO_8601);
+
+            let momentStartedAt = null;
+
+            if (data.startedAt) {
+                momentStartedAt = moment(data.startedAt, moment.ISO_8601);
+                if (!momentStartedAt.isValid()) {
+                    momentStartedAt = null;
+                }
+            }
+
+            data.startedAt = momentStartedAt;
+
             console.error('Loaded data:');
             console.error(data);
             store.commit('startTracking', data);
+
         });
     },
 
     loadTracker() {
-
+        this.db.local.allDocs({include_docs: true}).then(data => {
+            if (data && data.rows && Array.isArray(data.rows)) {
+                store.commit('clearTracker');
+                data.rows.forEach((row) => {
+                    if (row.doc) {
+                        row.doc.startedAt = moment(row.doc.startedAt, moment.ISO_8601);
+                        row.doc.finishedAt = moment(row.doc.finishedAt, moment.ISO_8601);
+                        store.commit('addToTracker', row.doc);
+                    }
+                });
+            }
+        });
     },
 
     init() {
         this.db.local = new PouchDB('ttracker');
         this.loadTrackingNow();
+        this.loadTracker();
     },
 
 };

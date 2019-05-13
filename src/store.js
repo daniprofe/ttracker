@@ -10,23 +10,32 @@ Vue.use(Vuex);
 export default new Vuex.Store({
 
     state: {
-        trackingNow: {},
+
+        trackingNow: {
+            startedAt: null
+        },
+
         tracker: []
     },
 
     mutations: {
 
         startTracking(state, data) {
-            state.trackingNow = data;
+            state.trackingNow.startedAt = data.startedAt;
+            state.trackingNow._rev = data._rev;
         },
 
         stopTracking(state, data) {
             state.trackingNow.startedAt = null;
-            state._rev = data._rev;
+            state.trackingNow._rev = data._rev;
         },
 
-        addRecordToTracker(state, data) {
+        addToTracker(state, data) {
             state.tracker.push(data);
+        },
+
+        clearTracker(state) {
+            state.tracker = [];
         }
 
     },
@@ -43,58 +52,61 @@ export default new Vuex.Store({
             };
 
             if (state.trackingNow._rev) {
-                console.error('update!!');
                 data._rev = state.trackingNow._rev;
             }
 
-            console.error('Data to write on trackingNow:');
-            console.error(data);
-
             pdb.db.local.put(data).then((dbData) => {
+                dbData._rev = dbData.rev;
                 dbData.startedAt = startedAt;
                 commit('startTracking', dbData);
             });
 
         },
 
-        addRecordToTracker({commit, state}) {
+        addTrackingNowToTracker({commit, state}) {
 
-            const finishedAt = moment();
+            return new Promise((resolve, reject) => {
 
-            const data = {
-                startedAt: state.trackingNow.startedAt.toISOString(),
-                finishedAt: finishedAt.toISOString(),
-                _id: 'tracker_' + finishedAt.format('YYYYMMDDHHmmssSSS')
-            };
+                const finishedAt = moment();
 
-            pdb.db.local.put(data).then((dbData) => {
+                const data = {
+                    startedAt: state.trackingNow.startedAt.toISOString(),
+                    finishedAt: finishedAt.toISOString(),
+                    _id: 'tracker_' + finishedAt.format('YYYYMMDDHHmmssSSS')
+                };
 
-                dbData.startedAt = state.trackingNow.startedAt;
-                dbData.finishedAt = finishedAt;
-                commit('addRecordToTracker', dbData);
+                pdb.db.local.put(data).then((dbData) => {
+                    dbData._rev = dbData.rev;
+                    dbData.startedAt = state.trackingNow.startedAt;
+                    dbData.finishedAt = finishedAt;
+                    commit('addToTracker', dbData);
+                    resolve();
+
+                });
 
             });
 
         },
 
-        stopTracking({commit, state}) {
+        stopTracking({commit, state, dispatch}) {
 
-            const data = {
-                _id: 'trackingNow',
-                _rev: state.trackingNow._rev,
-                startedAt: null
-            };
+            return dispatch('addTrackingNowToTracker').then(() => {
 
-            console.error('---- update trackingNow startedAt to null ----');
-            console.error(data);
+                const data = {
+                    _id: 'trackingNow',
+                    _rev: state.trackingNow._rev,
+                    startedAt: null
+                };
 
-            pdb.db.local.put(data).then((updateTrackingNowDbData) => {
-                console.error('---- trackingNow updated!! startedAt should be null! ----');
-                console.error(updateTrackingNowDbData);
-                commit('stopTracking', updateTrackingNowDbData);
+                pdb.db.local.put(data).then((updateTrackingNowDbData) => {
+                    updateTrackingNowDbData._rev = updateTrackingNowDbData.rev;
+                    commit('stopTracking', updateTrackingNowDbData);
+                });
+
             });
 
         }
+
     }
 
 });

@@ -64,9 +64,7 @@ export default {
 
     methods: {
         stop() {
-            this.$store.dispatch('addRecordToTracker').then(() => {
-                this.$store.dispatch('stopTracking');
-            });
+            this.$store.dispatch('stopTracking');
         }
     }
 
