@@ -71,6 +71,8 @@
 
 import Vue from 'vue';
 
+import SuperLogin from '@/services/SuperLogin';
+
 export default {
 
     name: 'LoginOrRegister',
@@ -127,6 +129,18 @@ export default {
             if (this.password === '') {
                 Vue.set(this.validationErrors, 'password', 'You must type your password!');
                 return false;
+            }
+
+            if (this.password.length < process.env.VUE_APP_MIN_PASSWORD_LENGTH) {
+
+                Vue.set(
+                    this.validationErrors,
+                    'password',
+                    `Password too short. Min length: ${process.env.VUE_APP_MIN_PASSWORD_LENGTH}`
+                );
+
+                return false;
+
             }
 
             if (this.validationErrors.password) {
@@ -203,7 +217,26 @@ export default {
             }
 
             if (validationOk) {
-                console.error('Valid!');
+
+                console.error('validation ok!');
+
+                if (this.selectedMode === 'register') {
+
+                    console.error('trying to register a new user');
+
+                    SuperLogin.registerNewUser({
+                        email: this.email,
+                        password: this.password,
+                        confirmPassword: this.password
+                    }).catch(failData => {
+                        if (failData && failData.response && failData.response.data && failData.response.data.validationErrors &&
+                            failData.response.data.validationErrors.email &&
+                            failData.response.data.validationErrors.email.indexOf("Email already in use") > -1) {
+                            console.error('Email already in use!!!!!');
+                        }
+                    });
+                }
+
             }
 
         }
